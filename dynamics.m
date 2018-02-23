@@ -3,10 +3,10 @@
 % BEGIN: function dynamics             %
 %--------------------------------------%
 
-function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,rho,p,Tenv,mach,rey1m,trim_fwd,trim_aft,ka_fwd,ka_aft] = dynamics(in,param,auxdat,k)
+function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Flift,rho,p,Tenv,mach,rey1m,trim_fwd,trim_aft,ka_fwd,ka_aft] = dynamics(in,param,auxdat,k)
 
-  engine_state = {'off' 'on' 'off' 'off' 'off' 'off'};
-  pha = {'a' 'a' 'a' 'r' 'r' 'r'};
+  engine_state = {'on' 'on' 'off' 'off' 'off' 'off'};
+  pha = {'a_1' 'a_2' 'r' 'r' 'r' 'r'};
 
   re = auxdat.re;
   gm = auxdat.gm;
@@ -46,7 +46,9 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,rho,p,Ten
   lon = reshape(lon,n,1);
   glat = reshape(glat,n,1);
 
-  if(strcmp(pha(k),'a')) ar_flag=1;end
+
+  if(strcmp(pha(k),'a_1')) ar_flag=0;end
+  if(strcmp(pha(k),'a_2')) ar_flag=1;end
   if(strcmp(pha(k),'r')) ar_flag=2;end
 
   % [cd,cl,rho,p] = get_cd_cl_rho_p(int32(n),double(h),double(lon),...
@@ -70,14 +72,23 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,rho,p,Ten
   ka_fwd = reshape(ka_fwd,n,1);
   ka_aft = reshape(ka_aft,n,1);
 
-  isp = auxdat.soar_isp;
-  thu0 = auxdat.soar_thu0;
-  sref = auxdat.soar_sref;
-  na = auxdat.soar_na;
+  isp = auxdat.spaceplane_isp;
+  sref = auxdat.spaceplane_sref;
+  na = auxdat.spaceplane_na;
 
 
   if(strcmp(engine_state(k),'on'))
+
+      if(strcmp(pha(k),'a_1')) 
+          thu0 = param(:,end-3);
+      elseif(strcmp(pha(k),'a_2')) 
+          thu0 = param(:,end-1);
+      else
+          thu0 = 0.0;
+      end
+
       thu = thu0-na*p;
+
       C = cos(aoa);
       S = sin(aoa);
       ca = -cl.*S+cd.*C;
@@ -85,6 +96,8 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,rho,p,Ten
       ca = ca*0.85;
       cd = cn.*S+ca.*C;
       cl = cn.*C-ca.*S;
+
+
   else
       thu0 = 0.0;
       thu = zeros(size(p));

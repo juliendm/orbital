@@ -18,11 +18,25 @@ function output = s3toEndpoint(input)
 
 	s = input.parameter;
 
+	dv_geo1 = s(1);
+	dv_geo2 = s(2);
+	dv_geo3 = s(3);
+	dv_geo4 = s(4);
+
+	dry_mass = compute_dry_mass(dv_geo1,dv_geo2,dv_geo3,dv_geo4);
+
 	%
 	% Objective Function:
 	%
 	%output.objective = -xf{3}(4)/1000; % Max v_MECO
+
 	output.objective = xf{6}(7)/1000; % Min Dry_Mass
+
+	%output.objective = x0{1}(7)/1000; % Min Mass
+	
+	%output.objective = dry_mass/1000; % Min Mass
+
+	%output.objective = s(end); % Vacuum Thrust
 
 	%
 	% phase links
@@ -38,7 +52,7 @@ function output = s3toEndpoint(input)
 	% mass losses at separation
 	%
 
-	output.eventgroup(3).event(1+7) = xf{3}(7) - x0{4}(7) - input.auxdata.us_mass;
+	output.eventgroup(1).event(1+7) = xf{1}(7) - x0{2}(7) - input.auxdata.booster_dry_mass;
 
 	%
 	% phase durations
@@ -56,12 +70,12 @@ function output = s3toEndpoint(input)
 	% upper stage injection conditions
 	% event group 7
 	%
-	r   = xf{3}(1);
-	lon = xf{3}(2);
-	lat = xf{3}(3);
-	v   = xf{3}(4);
-	gam = xf{3}(5);
-	al  = xf{3}(6);
+	r   = xf{2}(1);
+	lon = xf{2}(2);
+	lat = xf{2}(3);
+	v   = xf{2}(4);
+	gam = xf{2}(5);
+	al  = xf{2}(6);
 	[alt,lon,glat] = latgeo(int32(1),input.auxdata.re,input.auxdata.f_ell,r,lon,lat);
 	output.eventgroup(7).event = [gam, v, alt];
 
@@ -76,25 +90,18 @@ function output = s3toEndpoint(input)
 	% event group 9
 	%
 
-	dv_geo1 = s(1);
-	dv_geo2 = s(2);
-	dv_geo3 = s(3);
-	dv_geo4 = s(4);
-
-	% dv_geo1 = 0.0;
-	% dv_geo2 = 0.0;
-	% dv_geo3 = 0.0;
-	% dv_geo4 = 0.0;
-
-	dry_mass = compute_dry_mass(dv_geo1,dv_geo2,dv_geo3,dv_geo4);
-	output.eventgroup(9).event = [xf{6}(7) - dry_mass];
+	output.eventgroup(9).event = [xf{6}(7) - dry_mass - input.auxdata.us_mass]; % US IS STILL THERE AT LANDING !!!!!!!!!!!!!!!!!
 
 	%
 	% fuel limitations
 	% event group 10
 	%
 
-	output.eventgroup(10).event = [x0{2}(7) - xf{2}(7) - input.auxdata.fuel_mass];
+	booster_fuel_mass = s(end-2);
+	output.eventgroup(10).event = [x0{1}(7) - xf{1}(7) - booster_fuel_mass];
+
+	spaceplane_fuel_mass = s(end);
+	output.eventgroup(11).event = [x0{2}(7) - xf{2}(7) - spaceplane_fuel_mass];
 
 	%
 	% landing heading
@@ -103,7 +110,7 @@ function output = s3toEndpoint(input)
 
 	al  = xf{6}(6);
 
-	output.eventgroup(11).event = [al - 2*pi*floor(al/2/pi)];
+	output.eventgroup(12).event = [al - 2*pi*floor(al/2/pi)];
 
 
 

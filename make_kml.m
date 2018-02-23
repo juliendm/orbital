@@ -51,7 +51,7 @@ function [] = make_kml(sol)
 	% colors = jet(1);
 	% colors = 'ymcrgbwk';
 	% rng('shuffle');
-	kmlwrite('traj.kml',s,'Name',num2str(velocity),'Color',{'blue','red','blue','blue','blue','blue'},'LineWidth',2);
+	kmlwrite('output/traj.kml',s,'Name',num2str(velocity),'Color',{'blue','red','blue','blue','blue','blue'},'LineWidth',2);
 
 end
 
