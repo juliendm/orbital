@@ -23,30 +23,39 @@ function output = s3toEndpoint(input)
 	dv_geo3 = s(3);
 	dv_geo4 = s(4);
 
-	dry_mass = compute_dry_mass(dv_geo1,dv_geo2,dv_geo3,dv_geo4);
+	spaceplane_dry_mass = compute_dry_mass(dv_geo1,dv_geo2,dv_geo3,dv_geo4);
+
+	% booster_fuel_mass = s(end-2);
+	% spaceplane_fuel_mass = s(end);
+	% booster_fuel_mass = input.auxdata.booster_fuel_mass;
+	% spaceplane_fuel_mass = input.auxdata.spaceplane_fuel_mass;
 
 	%
 	% Objective Function:
 	%
-	%output.objective = -xf{3}(4)/1000; % Max v_MECO
+	% output.objective = -xf{2}(4)/1000; % Max v_MECO
 
-	output.objective = xf{6}(7)/1000; % Min Dry_Mass
+	%output.objective = xf{6}(7)/1000; % Min Dry_Mass
 
 	%output.objective = x0{1}(7)/1000; % Min Mass
+	%output.objective = xf{2}(7)/1000; % Min Mass
 	
 	%output.objective = dry_mass/1000; % Min Mass
 
-	%output.objective = s(end); % Vacuum Thrust
+	% output.objective = booster_fuel_mass + spaceplane_fuel_mass;
+
+	output.objective = (s(end-3)+s(end-1))/1000;
 
 	%
 	% phase links
-	% event groups 1-5
+	% event groups 1-6
 	%
 	output.eventgroup(1).event = [tf{1}-t0{2},xf{1}-x0{2}];
 	output.eventgroup(2).event = [tf{2}-t0{3},xf{2}-x0{3}];
 	output.eventgroup(3).event = [tf{3}-t0{4},xf{3}-x0{4}];
 	output.eventgroup(4).event = [tf{4}-t0{5},xf{4}-x0{5}];
 	output.eventgroup(5).event = [tf{5}-t0{6},xf{5}-x0{6}];
+	output.eventgroup(6).event = [tf{6}-t0{7},xf{6}-x0{7}];
 
 	%
 	% mass losses at separation
@@ -56,61 +65,61 @@ function output = s3toEndpoint(input)
 
 	%
 	% phase durations
-	% event group 6
+	% event group 7
 	%
-	output.eventgroup(6).event = [...
+	output.eventgroup(7).event = [...
 	tf{1}-t0{1},...
 	tf{2}-t0{2},...
 	tf{3}-t0{3},...
 	tf{4}-t0{4},...
 	tf{5}-t0{5},...
-	tf{6}-t0{6}];
+	tf{6}-t0{6},...
+	tf{7}-t0{7}];
 
-	%
-	% upper stage injection conditions
-	% event group 7
-	%
-	r   = xf{2}(1);
-	lon = xf{2}(2);
-	lat = xf{2}(3);
-	v   = xf{2}(4);
-	gam = xf{2}(5);
-	al  = xf{2}(6);
-	[alt,lon,glat] = latgeo(int32(1),input.auxdata.re,input.auxdata.f_ell,r,lon,lat);
-	output.eventgroup(7).event = [gam, v, alt];
+	% %
+	% % upper stage injection conditions
+	% % event group 7
+	% %
+	% r   = xf{2}(1);
+	% lon = xf{2}(2);
+	% lat = xf{2}(3);
+	% v   = xf{2}(4);
+	% gam = xf{2}(5);
+	% al  = xf{2}(6);
+	% [alt,lon,glat] = latgeo(int32(1),input.auxdata.re,input.auxdata.f_ell,r,lon,lat);
+	% output.eventgroup(7).event = [gam, v, alt];
 
-	%
-	% regularization for re-entry
-	% event group 8
-	%
-	output.eventgroup(8).event = [input.phase(5).integral+input.phase(6).integral];
+	% %
+	% % regularization for re-entry
+	% % event group 8
+	% %
+	% output.eventgroup(7).event = [input.phase(5).integral+input.phase(6).integral];
 
 	%
 	% final dry mass
-	% event group 9
+	% event group 8
 	%
 
-	output.eventgroup(9).event = [xf{6}(7) - dry_mass - input.auxdata.us_mass]; % US IS STILL THERE AT LANDING !!!!!!!!!!!!!!!!!
+	output.eventgroup(8).event = [xf{2}(7) - spaceplane_dry_mass - input.auxdata.us_mass]; % US IS STILL THERE AT LANDING !!!!!!!!!!!!!!!!!
+
+	% output.eventgroup(9).event = [x0{1}(7) - spaceplane_dry_mass - input.auxdata.us_mass - booster_fuel_mass - spaceplane_fuel_mass - input.auxdata.booster_dry_mass]; % US IS STILL THERE AT LANDING !!!!!!!!!!!!!!!!!
 
 	%
 	% fuel limitations
-	% event group 10
+	% event group 9
 	%
 
-	booster_fuel_mass = s(end-2);
-	output.eventgroup(10).event = [x0{1}(7) - xf{1}(7) - booster_fuel_mass];
 
-	spaceplane_fuel_mass = s(end);
-	output.eventgroup(11).event = [x0{2}(7) - xf{2}(7) - spaceplane_fuel_mass];
+	output.eventgroup(9).event = [x0{1}(7) - xf{1}(7), x0{2}(7) - xf{2}(7)];
 
 	%
 	% landing heading
-	% event group 11
+	% event group 10
 	%
 
 	al  = xf{6}(6);
 
-	output.eventgroup(12).event = [al - 2*pi*floor(al/2/pi)];
+	output.eventgroup(10).event = [al]; %[al - 2*pi*floor(al/2/pi)];
 
 
 

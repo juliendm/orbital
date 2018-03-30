@@ -36,6 +36,10 @@ function [cd,cl,rho,p,Tenv,mach,rey1m,trim_fwd,trim_aft,ka_fwd,ka_aft] = aerodyn
         dv_mach = mach(i);
         dv_rey = 0.0; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   log10(rey1m(i)) + 3.0/8.0*dv_mach - 7.0;  
 
+        if (dv_mach >= 8.0)
+            dv_mach = 8.0; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DATABASE NOT VALID BEYOND THAT: SPACE SHUTTLE BOOK FIX BEYOND MACH 10 ANYWAY ...
+        end
+
         if (dv_mach >= 1.0)
             dv_aoa = (aoa_deg(i) - (3.92857*dv_mach+3.57143)) / (1.78571*dv_mach+5.71429); % Supersonic
         else

@@ -3,10 +3,11 @@
 % BEGIN: function dynamics             %
 %--------------------------------------%
 
-function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Flift,rho,p,Tenv,mach,rey1m,trim_fwd,trim_aft,ka_fwd,ka_aft] = dynamics(in,param,auxdat,k)
+function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,dt,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Flift,rho,p,Tenv,mach,rey1m,trim_fwd,trim_aft,ka_fwd,ka_aft] = dynamics(in,param,auxdat,k)
 
-  engine_state = {'on' 'on' 'off' 'off' 'off' 'off'};
-  pha = {'a_1' 'a_2' 'r' 'r' 'r' 'r'};
+  engine_type={'booster' 'spaceplane' 'spaceplane' 'spaceplane' 'spaceplane' 'spaceplane' 'spaceplane'};
+  engine_state = {'on' 'off' 'on' 'off' 'off' 'off' 'off'};
+  pha = {'a' 'a' 'a' 'r' 'r' 'r' 'r'};
 
   re = auxdat.re;
   gm = auxdat.gm;
@@ -29,6 +30,7 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Fli
   m = in.state(:,7);
   aoa = in.state(:,8);
   bank = in.state(:,9);
+  tva = in.state(:,10);
 
   dv1 = param(:,1);
   dv2 = param(:,2);
@@ -37,6 +39,7 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Fli
 
   daoa = in.control(:,1);
   dbank = in.control(:,2);
+  dtva = in.control(:,3);
 
   n = length(r);
 
@@ -47,13 +50,24 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Fli
   glat = reshape(glat,n,1);
 
 
-  if(strcmp(pha(k),'a_1')) ar_flag=0;end
-  if(strcmp(pha(k),'a_2')) ar_flag=1;end
+  if(strcmp(pha(k),'a')) ar_flag=1;end
   if(strcmp(pha(k),'r')) ar_flag=2;end
 
   % [cd,cl,rho,p] = get_cd_cl_rho_p(int32(n),double(h),double(lon),...
   %     double(glat),double(aoa*180/pi),double(v),double(tt),double(re),...
   %     int32(date0_doy),double(date0_sec),int32(atm_model),int32(ar_flag));
+
+
+  % if(strcmp(engine_state(k),'on'))
+  %   aoa = 0.0*r;   %%%%%%%%%%%%%%%%%%%%%%%%%%% WHEN PROPU IS ON: AOA = TVA, SO NO AERODYNAMICS EFFECTS
+  %   tva = control_angle;
+  % else
+  %   aoa = control_angle;
+  %   tva = 0.0*r;
+  % end
+
+
+
 
   [cd,cl,rho,p,Tenv,mach,rey1m,trim_fwd,trim_aft,ka_fwd,ka_aft] = aerodynamics(k,n,h,lon,...
       glat,aoa*180/pi,v,tt,re,...
@@ -72,23 +86,23 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Fli
   ka_fwd = reshape(ka_fwd,n,1);
   ka_aft = reshape(ka_aft,n,1);
 
-  isp = auxdat.spaceplane_isp;
-  sref = auxdat.spaceplane_sref;
-  na = auxdat.spaceplane_na;
 
+  if(strcmp(engine_type(k),'booster'))
+     isp = auxdat.booster_isp;
+     thu0 = param(:,end-3);
+     % thu0 = auxdat.booster_thu0;
+     sref = auxdat.booster_sref;
+     na = auxdat.booster_na;
+  elseif(strcmp(engine_type(k),'spaceplane'))
+     isp = auxdat.spaceplane_isp;
+     thu0 = param(:,end-1);
+     % thu0 = auxdat.spaceplane_thu0;
+     sref = auxdat.spaceplane_sref;
+     na = auxdat.spaceplane_na;
+  end
 
   if(strcmp(engine_state(k),'on'))
-
-      if(strcmp(pha(k),'a_1')) 
-          thu0 = param(:,end-3);
-      elseif(strcmp(pha(k),'a_2')) 
-          thu0 = param(:,end-1);
-      else
-          thu0 = 0.0;
-      end
-
       thu = thu0-na*p;
-
       C = cos(aoa);
       S = sin(aoa);
       ca = -cl.*S+cd.*C;
@@ -96,12 +110,11 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Fli
       ca = ca*0.85;
       cd = cn.*S+ca.*C;
       cl = cn.*C-ca.*S;
-
-
   else
       thu0 = 0.0;
       thu = zeros(size(p));
   end
+
 
   Fi = 0.0;
   Fj = 0.0;
@@ -120,18 +133,18 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Fli
   dlat = v./r.*cos(al).*cos(gam);
   dv =  -gm./r.^2.*sin(gam) ...
         -rho.*v.^2*sref.*cd./m/2.0 ...
-        +thu.*cos(aoa)./m ...
+        +thu.*cos(aoa+tva)./m ...
         +omega^2*r.*cos(lat).*(sin(gam).*cos(lat)-cos(gam).*sin(lat).*cos(al)) ...
         +Fi.*sin(gam)./m+Fj.*sin(al).*cos(gam)./m+Fk.*cos(al).*cos(gam)./m;
   dgam = -gm./r.^2.*cos(gam)./v ...
          +rho.*v*sref.*cl.*cos(bank)./m/2.0 ...
-         +thu.*sin(aoa).*cos(bank)./m./v ...
+         +thu.*sin(aoa+tva).*cos(bank)./m./v ...
          +v./r.*cos(gam) ...
          +2.0*omega*sin(al).*cos(lat) ...
          +omega^2*r.*cos(lat).*(cos(gam).*cos(lat)+sin(gam).*sin(lat).*cos(al))./v ...
          +Fi./m./v.*cos(gam)-Fj./m./v.*sin(al).*sin(gam)-Fk./m./v.*sin(al).*sin(gam);
   dal = rho.*v*sref.*cl.*sin(bank)./m./cos(gam)/2.0 ...
-        +thu.*sin(aoa).*sin(bank)./m./v./cos(gam) ...
+        +thu.*sin(aoa+tva).*sin(bank)./m./v./cos(gam) ...
         +v./r.*cos(gam).*sin(al).*sin(lat)./cos(lat) ...
         +2.0*omega*(sin(lat)-cos(lat).*cos(al).*tan(gam)) ...
         +omega^2*r.*sin(lat).*cos(lat).*sin(al)./cos(gam)./v ...
@@ -140,6 +153,7 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Fli
 
   da = daoa;
   db = dbank;
+  dt = dtva;
 
   %
   % load factor in the body frame of the vehicle
