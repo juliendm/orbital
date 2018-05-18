@@ -66,6 +66,9 @@ surfpack_load_sps('k_alpha_fwd','externals/auxfiles/perfo/model_K_ALPHA_FWD.sps'
 surfpack_load_sps('k_alpha_aft','externals/auxfiles/perfo/model_K_ALPHA_AFT.sps');
 
 
+%surfpack_load_sps('thickness_001','../../RUNS/SPACE/RESPONSE_SURFACE_STRUCTURE/MODELS/model_thickness_00001.sps');
+surfpack_load('thickness_001','../../RUNS/SPACE/RESPONSE_SURFACE_STRUCTURE/BUILD_POINTS/enriched_points_thickness_00001.dat',14,1,'externals/auxfiles/structure/model_thickness_001.sps');
+
 
 d2r = pi/180;
 r2d = 180/pi;
@@ -111,10 +114,10 @@ auxdata.us_mass = 5000.0;
 
 % auxdata.fuel_mass = 25000.0;
 
-% dv1_min = -0.5   ; dv1_max = 0.5;
-% dv2_min = -0.5   ; dv2_max = 0.5;
-% dv3_min = -0.5   ; dv3_max = 0.5;
-% dv4_min = -0.2   ; dv4_max = 0.5;
+dv1_min = -0.5   ; dv1_max = 0.5;
+dv2_min = -0.5   ; dv2_max = 0.5;
+dv3_min = -0.5   ; dv3_max = 0.5;
+dv4_min = -0.2   ; dv4_max = 0.5;
 
 
 
@@ -142,10 +145,10 @@ spaceplane_fuel_mass_min = 10000.0; spaceplane_fuel_mass_max = 26000.0; %%%%%%%%
 % dv3_min = -0.5   ; dv3_max = -0.5;
 % dv4_min = -0.2   ; dv4_max =  0.5;
 
-dv1_min =  0.5   ; dv1_max =  0.5;
-dv2_min =  0.5   ; dv2_max =  0.5;
-dv3_min = -0.5   ; dv3_max = -0.5;
-dv4_min =  0.5   ; dv4_max =  0.5;
+% dv1_min =  0.5   ; dv1_max =  0.5;
+% dv2_min =  0.5   ; dv2_max =  0.5;
+% dv3_min = -0.5   ; dv3_max = -0.5;
+% dv4_min =  0.5   ; dv4_max =  0.5;
 
 
 bounds.parameter.lower = [dv1_min,dv2_min,dv3_min,dv4_min,booster_thu0_min,booster_fuel_mass_min,spaceplane_thu0_min,spaceplane_fuel_mass_min];
@@ -168,7 +171,7 @@ t_min    = 0.0       ; t_max    = 10000.0;
 h_min    = 0e3       ; h_max    = 2000e3;
 
 lon_min  = -360.0*d2r ; lon_max  = 360.0*d2r;
-glat_min = -90.0*d2r ; glat_max =  90.0*d2r;
+glat_min =  -90.0*d2r ; glat_max =  90.0*d2r;
 
 v_min    = 0.0       ; v_max    = 9000.0;
 gam_min  = 0.0*d2r ; gam_max  = 90.0*d2r;
@@ -596,14 +599,14 @@ nz_min    = 0.0      ; nz_max   = 5.0;
 
 for k=1:3
 
-       bounds.phase(k).path.lower = [pdyn_min,hr_min,nz_min];
-       bounds.phase(k).path.upper = [pdyn_max,hr_max,nz_max];
+       % bounds.phase(k).path.lower = [pdyn_min,hr_min,nz_min];
+       % bounds.phase(k).path.upper = [pdyn_max,hr_max,nz_max];
 
        % bounds.phase(k).path.lower = [pdyn_min,hr_min,nz_min,-4.0,-4.0];
        % bounds.phase(k).path.upper = [pdyn_max,hr_max,nz_max, 6.0, 6.0];
 
-	% bounds.phase(k).path.lower = [pdyn_min,hr_min,nz_min,-4.0,-4.0,-10.0,-10.0];
-	% bounds.phase(k).path.upper = [pdyn_max,hr_max,nz_max, 6.0, 6.0,  4.0,  4.0];
+	bounds.phase(k).path.lower = [pdyn_min,hr_min,nz_min,-4.0,-4.0,-10.0,-10.0];
+	bounds.phase(k).path.upper = [pdyn_max,hr_max,nz_max, 6.0, 6.0,  4.0,  4.0];
 
        % bounds.phase(k).path.lower = [pdyn_min,hr_min,nz_min,-30.0,-30.0,-30.0,-30.0];
        % bounds.phase(k).path.upper = [pdyn_max,hr_max,nz_max, 30.0, 30.0, 30.0, 30.0];
@@ -616,14 +619,14 @@ nz_min    = 0.0      ; nz_max   = 5.0;
 
 for k=4:7
 
-       bounds.phase(k).path.lower = [pdyn_min,hr_min,nz_min];
-       bounds.phase(k).path.upper = [pdyn_max,hr_max,nz_max];
+       % bounds.phase(k).path.lower = [pdyn_min,hr_min,nz_min];
+       % bounds.phase(k).path.upper = [pdyn_max,hr_max,nz_max];
 
        % bounds.phase(k).path.lower = [pdyn_min,hr_min,nz_min,-4.0,-4.0];
        % bounds.phase(k).path.upper = [pdyn_max,hr_max,nz_max, 6.0, 6.0];
 
-	% bounds.phase(k).path.lower = [pdyn_min,hr_min,nz_min,-4.0,-4.0,-10.0,-10.0];
-	% bounds.phase(k).path.upper = [pdyn_max,hr_max,nz_max, 6.0, 6.0,  4.0,  4.0];
+	bounds.phase(k).path.lower = [pdyn_min,hr_min,nz_min,-4.0,-4.0,-10.0,-10.0];
+	bounds.phase(k).path.upper = [pdyn_max,hr_max,nz_max, 6.0, 6.0,  4.0,  4.0];
 
        % bounds.phase(k).path.lower = [pdyn_min,hr_min,nz_min,-30.0,-30.0,-30.0,-30.0];
        % bounds.phase(k).path.upper = [pdyn_max,hr_max,nz_max, 30.0, 30.0, 30.0, 30.0];
@@ -801,11 +804,11 @@ filter = 0;
 
 if smooth == 1
 
-    % sp = [0.001 0.01 0.01 0.001 0.00001 0.01 0.000001];
-    % N  = [50 10 50 50 50 50 50];
+    sp = [0.001 0.01 0.01 0.001 0.00001 0.01 0.000001];
+    N  = [50 10 50 50 50 50 50];
 
-    sp = [0.001 0.001 0.001 0.001 0.001 0.001 0.001];
-    N  = [95 10 105 100 115 145 130];
+    % sp = [0.001 0.001 0.001 0.001 0.001 0.001 0.001];
+    % N  = [95 10 105 100 115 145 130];
 
     if isfield(output.result,'nextsetup')
         local_solution = output.result.nextsetup.guess;
@@ -926,7 +929,8 @@ end
 % get_cd_cl_rho_p();
 get_rnose();
 
-base_name = 'case_1';
+
+base_name = 'case_3';
 
 compute_second_run = 1;
 
@@ -959,6 +963,12 @@ if compute_second_run == 1
 
               setup.nlp.snoptoptions.maxiterations = 20;
               setup.mesh.maxiterations = 0;
+
+
+
+
+
+
 
               output = gpops2(setup);
 

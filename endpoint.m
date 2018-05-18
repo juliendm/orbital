@@ -5,6 +5,10 @@
 
 function output = s3toEndpoint(input)
 
+	global load_cases
+
+	% disp('Call Endpoint ...')
+
 	%
 	% Variables at Start and End of each phase
 	%
@@ -23,7 +27,12 @@ function output = s3toEndpoint(input)
 	dv_geo3 = s(3);
 	dv_geo4 = s(4);
 
-	spaceplane_dry_mass = compute_dry_mass(dv_geo1,dv_geo2,dv_geo3,dv_geo4);
+
+	dvs = reverse_variable_change(load_cases,dv_geo1,dv_geo2,dv_geo3,dv_geo4,0.0,0.0);
+	spaceplane_dry_mass = compute_dry_mass(dvs);
+
+
+	spaceplane_dry_mass = compute_dry_mass_bis(dv_geo1,dv_geo2,dv_geo3,dv_geo4);
 
 	% booster_fuel_mass = s(end-2);
 	% spaceplane_fuel_mass = s(end);
@@ -44,7 +53,7 @@ function output = s3toEndpoint(input)
 
 	% output.objective = booster_fuel_mass + spaceplane_fuel_mass;
 
-	output.objective = (s(end-3)+s(end-1))/1000;
+	output.objective = (s(end-3)+s(end-1))/1000;  % NOT RIGHT APPROACH: MIN INTEGRATED THRUST WOULD BE BETTER !!!!!!!!!!!!!!!!!!!!!!!!!
 
 	%
 	% phase links
@@ -100,7 +109,7 @@ function output = s3toEndpoint(input)
 	% event group 8
 	%
 
-	output.eventgroup(8).event = [xf{2}(7) - spaceplane_dry_mass - input.auxdata.us_mass]; % US IS STILL THERE AT LANDING !!!!!!!!!!!!!!!!!
+	output.eventgroup(8).event = [xf{3}(7) - spaceplane_dry_mass - input.auxdata.us_mass]; % US IS STILL THERE AT LANDING !!!!!!!!!!!!!!!!!
 
 	% output.eventgroup(9).event = [x0{1}(7) - spaceplane_dry_mass - input.auxdata.us_mass - booster_fuel_mass - spaceplane_fuel_mass - input.auxdata.booster_dry_mass]; % US IS STILL THERE AT LANDING !!!!!!!!!!!!!!!!!
 
@@ -110,14 +119,14 @@ function output = s3toEndpoint(input)
 	%
 
 
-	output.eventgroup(9).event = [x0{1}(7) - xf{1}(7), x0{2}(7) - xf{2}(7)];
+	output.eventgroup(9).event = [x0{1}(7) - xf{1}(7), x0{3}(7) - xf{3}(7)];
 
 	%
 	% landing heading
 	% event group 10
 	%
 
-	al  = xf{6}(6);
+	al  = xf{7}(6);
 
 	output.eventgroup(10).event = [al]; %[al - 2*pi*floor(al/2/pi)];
 
@@ -125,11 +134,47 @@ function output = s3toEndpoint(input)
 
 end
 
+
 %-----------------------------------------------%
 % End Function:  endpoint                       %
 %-----------------------------------------------%
 
-function dry_mass = compute_dry_mass(dv_geo1,dv_geo2,dv_geo3,dv_geo4)
+function dvs = reverse_variable_change(load_cases,dv_geo1,dv_geo2,dv_geo3,dv_geo4,dv_geo5,dv_geo6)
+
+	sizes = size(load_cases);
+
+	dvs = zeros(sizes(1),14);
+
+	for index = 1:sizes(1)
+
+        dv_mach = load_cases(index,1);
+        Reynolds = load_cases(index,2);
+        AoA = load_cases(index,3);
+
+        dv_rey = log10(Reynolds) + 3.0/8.0*dv_mach - 7.0;
+    
+        if dv_mach >= 1.0
+            dv_aoa = (AoA - (3.92857*dv_mach+3.57143)) / (1.78571*dv_mach+5.71429); % Supersonic
+        else
+            dv_aoa = AoA/7.5-1.0; % Subsonic
+        end
+
+        dv_nx = load_cases(index,4);
+        dv_nz = load_cases(index,5);
+        dv_thrust = load_cases(index,6);
+        dv_pdyn = load_cases(index,7);
+        dv_fuel_mass = load_cases(index,8);
+
+        dvs(index,:) = [dv_mach, dv_rey, dv_aoa, dv_nx, dv_nz, dv_thrust, dv_pdyn, dv_fuel_mass, dv_geo1, dv_geo2, dv_geo3, dv_geo4, dv_geo5, dv_geo6];
+
+    end
+
+end
+
+
+
+
+function dry_mass = compute_dry_mass_bis(dv_geo1,dv_geo2,dv_geo3,dv_geo4)
 
   % strake
   % x = 4.44779 y + 2.6669425 # - 5.11669

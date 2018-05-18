@@ -162,15 +162,24 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,dt,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,
   Fdrag=cd.*rho.*v.^2*sref/2;
 
   z=tt*0;z=[z z z];
-  FT=z;FT(:,1)=thu;      % body frame 
+
+
+  ct=cos(tva);st=sin(tva);
+
+  FT=z;
+  FT(:,1)= ct.*thu;      % body frame 
+  FT(:,3)=-st.*thu;      % body frame    % + or - ????????????
+
   FD=z;FD(:,1)=-Fdrag;   % aerodynamic frame
   FL=z;FL(:,3)=-Flift;   % aerodynamic frame
 
   ca=cos(aoa);sa=sin(aoa);
+
   x=ca.*FD(:,1)-sa.*FD(:,3);
   y=FD(:,2);
   z=sa.*FD(:,1)+ca.*FD(:,3);
   FD=[x y z];
+
   x=ca.*FL(:,1)-sa.*FL(:,3);
   y=FL(:,2);
   z=sa.*FL(:,1)+ca.*FL(:,3);
