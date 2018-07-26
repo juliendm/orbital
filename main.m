@@ -53,8 +53,6 @@ get_rnose();
 % surfpack_load('k_alpha_aft','externals/auxfiles/perfo/build_points_K_ALPHA_AFT.dat',7,1,'externals/auxfiles/perfo/model_K_ALPHA_AFT.sps');
 
 
-
-
 surfpack_load_sps('lift_sub','externals/auxfiles/aero/model_lift_sub.sps');
 surfpack_load_sps('lift_sup','externals/auxfiles/aero/model_lift_sup.sps');
 surfpack_load_sps('drag_sub','externals/auxfiles/aero/model_drag_sub.sps');
@@ -65,9 +63,35 @@ surfpack_load_sps('trim_aft','externals/auxfiles/perfo/model_TRIM_AFT.sps');
 surfpack_load_sps('k_alpha_fwd','externals/auxfiles/perfo/model_K_ALPHA_FWD.sps');
 surfpack_load_sps('k_alpha_aft','externals/auxfiles/perfo/model_K_ALPHA_AFT.sps');
 
+n_members = 132;
 
-%surfpack_load_sps('thickness_001','../../RUNS/SPACE/RESPONSE_SURFACE_STRUCTURE/MODELS/model_thickness_00001.sps');
-surfpack_load('thickness_001','../../RUNS/SPACE/RESPONSE_SURFACE_STRUCTURE/BUILD_POINTS/enriched_points_thickness_00001.dat',14,1,'externals/auxfiles/structure/model_thickness_001.sps');
+for member_index = 1:n_members
+       model_name = ['thickness_',num2str(member_index,'%03d')];
+       sps_file = ['externals/auxfiles/structure/model_thickness_',num2str(member_index,'%03d'),'.sps'];
+       surfpack_load_sps(model_name,sps_file);
+end
+
+for member_index = 1:n_members
+       model_name = ['area_',num2str(member_index,'%03d')];
+       sps_file = ['externals/auxfiles/structure/model_area_',num2str(member_index,'%03d'),'.sps'];
+       surfpack_load_sps(model_name,sps_file);
+end
+
+% for member_index = 1:n_members
+%        model_name = ['thickness_',num2str(member_index,'%03d')];
+%        build_points_file = ['../../RUNS/SPACE/RESPONSE_SURFACE_STRUCTURE/BUILD_POINTS/reduced_points_thickness_',num2str(member_index,'%05d'),'.dat'];
+%        sps_file = ['externals/auxfiles/structure/model_thickness_',num2str(member_index,'%03d'),'.sps'];
+%        surfpack_load(model_name, build_points_file, 14, 1, sps_file, '0.01');
+% end
+
+% for member_index = 1:n_members
+%        model_name = ['area_',num2str(member_index,'%03d')];
+%        build_points_file = ['../../RUNS/SPACE/RESPONSE_SURFACE_STRUCTURE/BUILD_POINTS/reduced_points_area_',num2str(member_index,'%05d'),'.dat'];
+%        sps_file = ['externals/auxfiles/structure/model_area_',num2str(member_index,'%03d'),'.sps'];
+%        surfpack_load(model_name, build_points_file, 14, 1, sps_file, '0.0');
+% end
+
+
 
 
 d2r = pi/180;
@@ -102,6 +126,7 @@ auxdata.spaceplane_sref = 120.0;
 auxdata.spaceplane_na = 2.55;
 
 auxdata.us_mass = 5000.0;
+auxdata.spaceplane_fuel_mass_max = 26000.0;
 
 %%
 %% phase definitions:
@@ -118,7 +143,8 @@ dv1_min = -0.5   ; dv1_max = 0.5;
 dv2_min = -0.5   ; dv2_max = 0.5;
 dv3_min = -0.5   ; dv3_max = 0.5;
 dv4_min = -0.2   ; dv4_max = 0.5;
-
+dv5_min = -0.5   ; dv5_max = 0.5;
+dv6_min = -0.2   ; dv6_max = 0.5;
 
 
 spaceplane_dry_mass_min = 1000.0;
@@ -128,7 +154,7 @@ booster_thu0_min = 500000.0; booster_thu0_max = 4000000.0;
 booster_fuel_mass_min = 80000.0; booster_fuel_mass_max = 500000.0; 
 
 spaceplane_thu0_min = 300000.0; spaceplane_thu0_max = 1000000.0;
-spaceplane_fuel_mass_min = 10000.0; spaceplane_fuel_mass_max = 26000.0; %%%%%%%%%%%%%%%%%%%%%%%%%%%%% VOLUME INSIDE SPACEPLANE !!!!!!!!!!!!!!!!!
+spaceplane_fuel_mass_min = 10000.0; spaceplane_fuel_mass_max = auxdata.spaceplane_fuel_mass_max; %%%%%%%%%%%%%%%%%%%%%%%%%%%%% VOLUME INSIDE SPACEPLANE !!!!!!!!!!!!!!!!!
 
 
 
@@ -151,8 +177,8 @@ spaceplane_fuel_mass_min = 10000.0; spaceplane_fuel_mass_max = 26000.0; %%%%%%%%
 % dv4_min =  0.5   ; dv4_max =  0.5;
 
 
-bounds.parameter.lower = [dv1_min,dv2_min,dv3_min,dv4_min,booster_thu0_min,booster_fuel_mass_min,spaceplane_thu0_min,spaceplane_fuel_mass_min];
-bounds.parameter.upper = [dv1_max,dv2_max,dv3_max,dv4_max,booster_thu0_max,booster_fuel_mass_max,spaceplane_thu0_max,spaceplane_fuel_mass_max];
+bounds.parameter.lower = [dv1_min,dv2_min,dv3_min,dv4_min,dv5_min,dv6_min,booster_thu0_min,booster_fuel_mass_min,spaceplane_thu0_min,spaceplane_fuel_mass_min];
+bounds.parameter.upper = [dv1_max,dv2_max,dv3_max,dv4_max,dv5_max,dv6_max,booster_thu0_max,booster_fuel_mass_max,spaceplane_thu0_max,spaceplane_fuel_mass_max];
 
 
 % dv1_0 = 0.0       ; dv1_f = 0.0;
@@ -530,7 +556,7 @@ bounds.phase(ph).state.lower(5) = -20*d2r;                                      
 %
 
 
-guess.parameter = [0.5,-0.27,-0.5,0.1,0.0,0.0,400000.0,25000.0];
+guess.parameter = [0.5,-0.27,-0.5,0.1,0.0,0.0,0.0,0.0,400000.0,25000.0];
 
 
 
@@ -761,7 +787,8 @@ elseif restart == 3
 	% 	setup.mesh.phase(k) = init.output.result.setup.mesh.phase(k);
 	% end
 
-       init.output.result.solution.parameter = [0.5,-0.27,-0.5,0.1,0.0,0.0,400000.0,25000.0]; % SHOULD PUT THE CONVERGED GUESS HERE
+       init.output.result.solution.parameter = [0.5,-0.27,-0.5,0.1,0.0,0.0,0.0,0.0,400000.0,25000.0]; % SHOULD PUT THE CONVERGED GUESS HERE
+       init.output.result.nextsetup.guess.parameter = [0.5,-0.27,-0.5,0.1,0.0,0.0,0.0,0.0,400000.0,25000.0];
 
        setup.guess = init.output.result.solution;
        setup.mesh = init.output.result.setup.mesh;
@@ -835,8 +862,8 @@ if smooth == 1
 
 		for s = 1:10
 
-            xx = local_solution.phase(k).state(:,s);
-			fxx = fit(tt,xx,'smoothingspline',fitoptions('Method','Smooth','SmoothingParam',sp(k)));
+                     xx = local_solution.phase(k).state(:,s);
+                     fxx = fit(tt,xx,'smoothingspline',fitoptions('Method','Smooth','SmoothingParam',sp(k)));
 
                      % if s == 2
                      %        fxx = fit([0,2500]',[-74.0*d2r,2.5*d2r]','smoothingspline',fitoptions('Method','Smooth','SmoothingParam',sp(k)));
@@ -930,7 +957,7 @@ end
 get_rnose();
 
 
-base_name = 'case_3';
+base_name = 'case_bf';
 
 compute_second_run = 1;
 

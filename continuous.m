@@ -23,7 +23,7 @@ function phaseout = s3toContinuous(input)
 
   for k=1:Nph
 
-    [dr,dlon,dlat,dv,dgam,dal,dm,da,db,dt,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Flift,rho,p,Tenv,mach,rey1m,trim_fwd,trim_aft,ka_fwd,ka_aft] = dynamics(input.phase(k),input.phase(k).parameter,input.auxdata,k);
+    [dr,dlon,dlat,dv,dgam,dal,dm,da,db,dt,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Flift,rho,p,Tenv,mach,rey1m,el_def,bf_def,trim_fwd,trim_aft,ka_fwd,ka_aft] = dynamics(input.phase(k),input.phase(k).parameter,input.auxdata,k);
 
     phaseout(k).dynamics = [dr,dlon,dlat,dv,dgam,dal,dm,da,db,dt];
 
@@ -69,7 +69,6 @@ function phaseout = s3toContinuous(input)
   max_fuel_mass = input.phase(2).state(1,7) - mass_cumul(end);
   fuel_mass_cumul = min(max_fuel_mass*ones(size(mass_cumul)), mass_cumul - mass_cumul(end));
 
-
   % NEED TO ADD A MIN DIST IN BETWEEN PEAKS BECAUSE AT THE BEGINING WHEN SOLUTION ARE VERY UNSMOOTH, IT WOULD IDENTIFY TOO MUCH PEAKS
 
   % Find Peaks
@@ -90,7 +89,16 @@ function phaseout = s3toContinuous(input)
 
 
 
+  % dv_geo1 = input.phase(Nph).parameter(end,1);
+  % dv_geo2 = input.phase(Nph).parameter(end,2);
+  % dv_geo3 = input.phase(Nph).parameter(end,3);
+  % dv_geo4 = input.phase(Nph).parameter(end,4);
+  % dv_geo5 = input.phase(Nph).parameter(end,5);
+  % dv_geo6 = input.phase(Nph).parameter(end,6);
 
+
+
+%  disp(['Dry mass: ',num2str(spaceplane_dry_mass_global)]);
 
   % % Visualize Peaks
 
@@ -111,6 +119,8 @@ end
 %------------------------------------%
 % END: function continuous           %
 %------------------------------------%
+
+
 
 
 

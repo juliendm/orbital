@@ -26,13 +26,19 @@ function output = s3toEndpoint(input)
 	dv_geo2 = s(2);
 	dv_geo3 = s(3);
 	dv_geo4 = s(4);
+	dv_geo5 = s(5);
+	dv_geo6 = s(6);
 
+	% spaceplane_dry_mass = compute_dry_mass_bis(dv_geo1,dv_geo2,dv_geo3,dv_geo4,dv_geo5,dv_geo6);
 
-	dvs = reverse_variable_change(load_cases,dv_geo1,dv_geo2,dv_geo3,dv_geo4,0.0,0.0);
-	spaceplane_dry_mass = compute_dry_mass(dvs);
+	% spaceplane_dry_mass_a = spaceplane_dry_mass
 
+	dvs = reverse_variable_change(load_cases,dv_geo1,dv_geo2,dv_geo3,dv_geo4,dv_geo5,dv_geo6);
+	dry_mass_current_step = input.phase(Nph).finalstate(7) - input.auxdata.us_mass; % WITHOUT PAYLOAD MASS
+	spaceplane_dry_mass = compute_dry_mass(dvs, dry_mass_current_step, input.auxdata);
 
-	spaceplane_dry_mass = compute_dry_mass_bis(dv_geo1,dv_geo2,dv_geo3,dv_geo4);
+	% spaceplane_dry_mass_b = spaceplane_dry_mass
+
 
 	% booster_fuel_mass = s(end-2);
 	% spaceplane_fuel_mass = s(end);
@@ -44,7 +50,7 @@ function output = s3toEndpoint(input)
 	%
 	% output.objective = -xf{2}(4)/1000; % Max v_MECO
 
-	%output.objective = xf{6}(7)/1000; % Min Dry_Mass
+	%output.objective = xf{7}(7)/1000; % Min Dry_Mass
 
 	%output.objective = x0{1}(7)/1000; % Min Mass
 	%output.objective = xf{2}(7)/1000; % Min Mass
@@ -111,6 +117,9 @@ function output = s3toEndpoint(input)
 
 	output.eventgroup(8).event = [xf{3}(7) - spaceplane_dry_mass - input.auxdata.us_mass]; % US IS STILL THERE AT LANDING !!!!!!!!!!!!!!!!!
 
+	% mass_end = xf{3}(7)
+	% eventgroup_8 = xf{3}(7) - spaceplane_dry_mass - input.auxdata.us_mass
+
 	% output.eventgroup(9).event = [x0{1}(7) - spaceplane_dry_mass - input.auxdata.us_mass - booster_fuel_mass - spaceplane_fuel_mass - input.auxdata.booster_dry_mass]; % US IS STILL THERE AT LANDING !!!!!!!!!!!!!!!!!
 
 	%
@@ -139,42 +148,12 @@ end
 % End Function:  endpoint                       %
 %-----------------------------------------------%
 
-function dvs = reverse_variable_change(load_cases,dv_geo1,dv_geo2,dv_geo3,dv_geo4,dv_geo5,dv_geo6)
-
-	sizes = size(load_cases);
-
-	dvs = zeros(sizes(1),14);
-
-	for index = 1:sizes(1)
-
-        dv_mach = load_cases(index,1);
-        Reynolds = load_cases(index,2);
-        AoA = load_cases(index,3);
-
-        dv_rey = log10(Reynolds) + 3.0/8.0*dv_mach - 7.0;
-    
-        if dv_mach >= 1.0
-            dv_aoa = (AoA - (3.92857*dv_mach+3.57143)) / (1.78571*dv_mach+5.71429); % Supersonic
-        else
-            dv_aoa = AoA/7.5-1.0; % Subsonic
-        end
-
-        dv_nx = load_cases(index,4);
-        dv_nz = load_cases(index,5);
-        dv_thrust = load_cases(index,6);
-        dv_pdyn = load_cases(index,7);
-        dv_fuel_mass = load_cases(index,8);
-
-        dvs(index,:) = [dv_mach, dv_rey, dv_aoa, dv_nx, dv_nz, dv_thrust, dv_pdyn, dv_fuel_mass, dv_geo1, dv_geo2, dv_geo3, dv_geo4, dv_geo5, dv_geo6];
-
-    end
-
-end
 
 
 
 
-function dry_mass = compute_dry_mass_bis(dv_geo1,dv_geo2,dv_geo3,dv_geo4)
+
+function dry_mass = compute_dry_mass_bis(dv_geo1,dv_geo2,dv_geo3,dv_geo4,dv_geo5,dv_geo6)
 
   % strake
   % x = 4.44779 y + 2.6669425 # - 5.11669
@@ -241,5 +220,47 @@ function dry_mass = compute_dry_mass_bis(dv_geo1,dv_geo2,dv_geo3,dv_geo4)
 
 end
 
+
+
+function dvs = reverse_variable_change(load_cases,dv_geo1,dv_geo2,dv_geo3,dv_geo4,dv_geo5,dv_geo6)
+
+  sizes = size(load_cases);
+
+  dvs = zeros(sizes(1),14);
+
+  for index = 1:sizes(1)
+
+        dv_mach = load_cases(index,1);
+        Reynolds = load_cases(index,2);
+        AoA = load_cases(index,3);
+
+        dv_rey = log10(Reynolds) + 3.0/8.0*dv_mach - 7.0;
+    
+        if dv_mach >= 1.0
+            dv_aoa = (AoA - (3.92857*dv_mach+3.57143)) / (1.78571*dv_mach+5.71429); % Supersonic
+        else
+            dv_aoa = AoA/7.5-1.0; % Subsonic
+        end
+
+        dv_nx = load_cases(index,4);
+        dv_nz = load_cases(index,5);
+        dv_thrust = load_cases(index,6);
+        dv_pdyn = load_cases(index,7);
+        dv_fuel_mass = load_cases(index,8);
+
+        dv_mach      = min(    8.0, max(    1.1,      dv_mach));
+        dv_rey       = min(    1.0, max(   -1.0,       dv_rey));
+        dv_aoa       = min(    1.0, max(   -1.0,       dv_aoa));
+        dv_nx        = min(    6.0, max(   -3.0,        dv_nx));
+        dv_nz        = min(    3.0, max(   -6.0,        dv_nz));
+        dv_thrust    = min(  3.0e6, max(    0.0,    dv_thrust));
+        dv_pdyn      = min( 35.0e3, max( 1.0e-6,      dv_pdyn));
+        dv_fuel_mass = min( 26.0e3, max(    0.0, dv_fuel_mass));
+
+        dvs(index,:) = [dv_mach, dv_rey, dv_aoa, dv_nx, dv_nz, dv_thrust, dv_pdyn, dv_fuel_mass, dv_geo1, dv_geo2, dv_geo3, dv_geo4, dv_geo5, dv_geo6];
+
+    end
+
+end
 
 

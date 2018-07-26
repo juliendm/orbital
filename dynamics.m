@@ -3,7 +3,7 @@
 % BEGIN: function dynamics             %
 %--------------------------------------%
 
-function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,dt,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Flift,rho,p,Tenv,mach,rey1m,trim_fwd,trim_aft,ka_fwd,ka_aft] = dynamics(in,param,auxdat,k)
+function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,dt,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,Flift,rho,p,Tenv,mach,rey1m,el_def,bf_def,trim_fwd,trim_aft,ka_fwd,ka_aft] = dynamics(in,param,auxdat,k)
 
   engine_type={'booster' 'spaceplane' 'spaceplane' 'spaceplane' 'spaceplane' 'spaceplane' 'spaceplane'};
   engine_state = {'on' 'off' 'on' 'off' 'off' 'off' 'off'};
@@ -36,6 +36,8 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,dt,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,
   dv2 = param(:,2);
   dv3 = param(:,3);
   dv4 = param(:,4);
+  dv5 = param(:,5);
+  dv6 = param(:,6);
 
   daoa = in.control(:,1);
   dbank = in.control(:,2);
@@ -69,10 +71,10 @@ function [dr,dlon,dlat,dv,dgam,dal,dm,da,db,dt,pdyn,hr,nx,ny,nz,thu,cd,cl,Fdrag,
 
 
 
-  [cd,cl,rho,p,Tenv,mach,rey1m,trim_fwd,trim_aft,ka_fwd,ka_aft] = aerodynamics(k,n,h,lon,...
+  [cd,cl,rho,p,Tenv,mach,rey1m,el_def,bf_def,trim_fwd,trim_aft,ka_fwd,ka_aft] = aerodynamics(k,n,h,lon,...
       glat,aoa*180/pi,v,tt,re,...
       date0_doy,date0_sec,atm_model,ar_flag,...
-      dv1,dv2,dv3,dv4);
+      dv1,dv2,dv3,dv4,dv5,dv6);
 
   cd = reshape(cd,n,1);
   cl = reshape(cl,n,1);
